@@ -1,0 +1,111 @@
+version: '3.5'
+services:
+  modo:
+    image: "<CFG_MKLIVE_DOCK_IMG_LIVE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
+    depends_on:
+      - dbhost
+      - revproxy
+    networks:
+      - modoboa
+    ports:
+      # these ports may be changed at any time but are only required
+      # if you're not using the Nginx Reverse Proxy below:
+      #- "<CFG_MDB_APACHE_SERVER_HTTP_PORT_ON_HOST>:80"
+      #- "<CFG_MDB_APACHE_SERVER_HTTPS_PORT_ON_HOST>:443"
+      # these ports should not be changed - at least not in a production context:
+      - "25:25"
+      - "587:587"
+      - "993:993"
+    volumes:
+      # these volumes are optional:
+      - "./mountpoints-modo/modo-pdfcredentials:/srv/modoboa/pdfcredentials"
+      - "./mountpoints-modo/apache-log:/var/log/apache2/modoboa"
+      - "./mountpoints-modo/mail-log:/var/log/mail"
+      - "./mountpoints-modo/radicale-log:/var/log/radicale"
+      # these volumes are mandatory for preserving the mailserver's state
+      # between reboots:
+      - "./mountpoints-modo/modo-rrdfiles:/srv/modoboa/rrdfiles"
+      - "./mountpoints-modo/vmail:/srv/vmail"
+      - "./mountpoints-modo/radicale-rights:/etc/radicale/modo_rights"
+      - "./mountpoints-modo/radicale-collections:/srv/radicale/collections"
+      - "./mountpoints-modo/dkim-keys:/var/lib/dkim"
+      - "./mountpoints-modo/clamav-signatures:/var/lib/clamav"
+      - "./mountpoints-ssl/certs:/etc/ssl/host-certs"
+      - "./mountpoints-ssl/keys:/etc/ssl/host-keys"
+    environment:
+      # these settings may be changed at any time:
+      - CF_OPENDKIM_CONF_ENABLE=<HAS_OPENDKIM_SUPPORT>
+      - CF_CLAMAV_CONF_ENABLE=<CFG_MDB_CLAMAV_CONF_ENABLE>
+      - CF_TIMEZONE=<CFG_MDB_TIMEZONE>
+      - CF_LANGUAGE=<CFG_MDB_LANGUAGE>
+      - CF_DAVHOSTNAME=<CFG_MDB_DAVHOSTNAME>
+      - CF_MODOBOA_CSRF_PROTECTION_ENABLE=<CFG_MDB_MODOBOA_CSRF_PROTECTION_ENABLE>
+      - CF_DEBUG_MDB_SCRIPTS=false
+      # changing these settings in a production context also requires changing
+      # the mailserver's DNS settings through your webhoster:
+      - CF_MAILHOSTNAME=<CFG_MDB_MAILHOSTNAME>
+      - CF_MAILDOMAIN=<CFG_MDB_MAILDOMAIN>
+      # these settings should not be changed:
+      - CF_AUTO_UPDATE_CONFIG=true
+      - CF_MARIADB_DOCKERHOST=dbhost
+      - CF_MODOBOA_CONF_DBNAME_AND_DBUSER=<GENERATED_MODOBOA_CONF_DBNAME_AND_DBUSER>
+      - CF_MODOBOA_CONF_DBPASS=<GENERATED_MODOBOA_CONF_DBPASS>
+      - CF_AMAVIS_CONF_DBNAME_AND_DBUSER=<GENERATED_AMAVIS_CONF_DBNAME_AND_DBUSER>
+      - CF_AMAVIS_CONF_DBPASS=<GENERATED_AMAVIS_CONF_DBPASS>
+      - CF_SPAMASSASS_CONF_DBNAME_AND_DBUSER=<GENERATED_SPAMASSASS_CONF_DBNAME_AND_DBUSER>
+      - CF_SPAMASSASS_CONF_DBPASS=<GENERATED_SPAMASSASS_CONF_DBPASS>
+      - CF_OPENDKIM_CONF_DBNAME_AND_DBUSER=<GENERATED_OPENDKIM_CONF_DBNAME_AND_DBUSER>
+      - CF_OPENDKIM_CONF_DBPASS=<GENERATED_OPENDKIM_CONF_DBPASS>
+    restart: unless-stopped
+    stdin_open: true
+    tty: false
+  dbhost:
+    image: "<CFG_MKLIVE_MARIADB_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
+    networks:
+      - modoboa
+    # the port is only required for debugging purposes
+    #ports:
+    #  - "<CFG_MDB_MARIADB_SERVER_PORT_ON_HOST>:3306"
+    volumes:
+      # this volume is mandatory for preserving the mailserver's state
+      # between reboots:
+      - "./<CFG_MKLIVE_PATH_MNTPOINTS_DB_HOST>/<CFG_MKLIVE_PATH_MNTPOINTS_DB_HOST_SUB_MARIADB>:/var/lib/mysql"
+    environment:
+      # this setting should not be changed:
+      - MYSQL_ROOT_PASSWORD=<GENERATED_MARIADB_ROOT_PASS>
+    restart: unless-stopped
+  revproxy:
+    image: "<CFG_MKLIVE_NGINX_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
+    networks:
+      - modoboa
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # these volumes are mandatory for preserving the proxy server's state
+      # between reboots:
+      - "./mountpoints-ssl/certs:/etc/ssl/host-certs"
+      - "./mountpoints-ssl/keys:/etc/ssl/host-keys"
+    environment:
+      # these settings may be changed at any time
+      - CF_DEBUG_MDB_SCRIPTS=false
+      # these settings may be changed at any time
+      # but must match the settings for the 'modo' container above:
+      - CF_DAVHOSTNAME=<CFG_MDB_DAVHOSTNAME>
+      - CF_MAILHOSTNAME=<CFG_MDB_MAILHOSTNAME>
+      - CF_MAILDOMAIN=<CFG_MDB_MAILDOMAIN>
+      # these settings should not be changed:
+      - CF_CREATE_VHOSTS=true
+      - CF_DEST_SERVER_ADDR=modo
+      - CF_DEST_SERVER_HTTP_PORT=80
+      - CF_DEST_SERVER_HTTPS_PORT=443
+    restart: unless-stopped
+
+networks:
+  modoboa:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        # this setting may be changed at any time:
+        - subnet: <CFG_MDB_DOCK_NET_INCL_BITMASK>
