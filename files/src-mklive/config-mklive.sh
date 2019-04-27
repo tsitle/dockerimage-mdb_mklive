@@ -2,6 +2,9 @@
 
 # ----------------------------------------------------------
 
+# Docker Image Repository prefix
+CFG_MKLIVE_DOCK_REPO_PREFIX="tsle"
+
 # Docker Image Name for input
 CFG_MKLIVE_MDB_RELASE_DI_NAME="mdb-install"
 

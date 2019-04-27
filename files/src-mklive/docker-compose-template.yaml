@@ -1,7 +1,7 @@
 version: '3.5'
 services:
   modo:
-    image: "<CFG_MKLIVE_DOCK_IMG_LIVE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
+    image: "<MDB_LIVE_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
     depends_on:
       - dbhost
       - revproxy
@@ -60,7 +60,7 @@ services:
     stdin_open: true
     tty: false
   dbhost:
-    image: "<CFG_MKLIVE_MARIADB_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
+    image: "<MDB_MARIADB_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
     networks:
       - modoboa
     # the port is only required for debugging purposes
@@ -75,7 +75,7 @@ services:
       - MYSQL_ROOT_PASSWORD=<GENERATED_MARIADB_ROOT_PASS>
     restart: unless-stopped
   revproxy:
-    image: "<CFG_MKLIVE_NGINX_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
+    image: "<MDB_NGINX_DOCKERIMAGE>:<CFG_MKLIVE_DOCK_IMG_INSTALL_VERS>"
     networks:
       - modoboa
     ports:

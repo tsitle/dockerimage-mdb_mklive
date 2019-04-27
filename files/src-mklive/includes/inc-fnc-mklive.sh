@@ -64,6 +64,7 @@ function mklive_checkConfigVars_isEmpty() {
 
 # @return int EXITCODE
 function mklive_checkConfigVars() {
+	mklive_checkConfigVars_isEmpty "CFG_MKLIVE_DOCK_REPO_PREFIX" && return 1
 	mklive_checkConfigVars_isEmpty "CFG_MKLIVE_MDB_RELASE_DI_NAME" && return 1
 	mklive_checkConfigVars_isEmpty "CFG_MKLIVE_DOCK_IMG_INSTALL_VERS" && return 1
 	if [ "$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS" != "latest" ]; then
@@ -151,25 +152,55 @@ function mklive_checkConfigVars() {
 	return 0
 }
 
+# Outputs that name of the Docker Image (incl. the repository prefix if applicable)
+#
+# @param string $1 Name of variable that container the Docker Image Name
+#
+# @return int EXITCODE
+function mklive_checkBaseImages_one() {
+	[ -z "$1" ] && {
+		# assert
+		echo "$VAR_MYNAME: Error: mklive_checkBaseImages_one(): invalid argument. Aborting." >/dev/stderr
+		return 1
+	}
+	[ -z "${!1}" ] && {
+		# assert
+		echo "$VAR_MYNAME: Error: mklive_checkBaseImages_one(): variable $1 not found. Aborting." >/dev/stderr
+		return 1
+	}
+	dck_getDoesDockerImageExist "${CFG_MKLIVE_DOCK_REPO_PREFIX}/${!1}" "$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
+	if [ $? -eq 0 ]; then
+		echo -n "${CFG_MKLIVE_DOCK_REPO_PREFIX}/${!1}"
+	else
+		dck_getDoesDockerImageExist "${!1}" "$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
+		if [ $? -eq 0 ]; then
+			echo -n "${!1}"
+		else
+			local TMP_PULL_FULL="${CFG_MKLIVE_DOCK_REPO_PREFIX}/${!1}:$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
+			echo "$VAR_MYNAME: Trying to pull image '$TMP_PULL_FULL'..." >/dev/stderr
+			docker pull "$TMP_PULL_FULL" >/dev/stderr
+			if [ $? -eq 0 ]; then
+				echo -n "${CFG_MKLIVE_DOCK_REPO_PREFIX}/${!1}"
+			else
+				echo "$VAR_MYNAME: Error: could not pull image '$TMP_PULL_FULL'. Aborting." >/dev/stderr
+				return 1
+			fi
+		fi
+	fi
+	return 0
+}
+
 # @return int EXITCODE
 function mklive_checkBaseImages() {
-	dck_getDoesDockerImageExist "$VAR_MDB_DOCK_IMG_INSTALL_INPUT" "$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
-	if [ $? -ne 0 ]; then
-		echo "$VAR_MYNAME: Error: Docker Image ${VAR_MDB_DOCK_IMG_INSTALL_INPUT}:${CFG_MKLIVE_DOCK_IMG_INSTALL_VERS} does not exist. Aborting." >/dev/stderr
-		return 1
-	fi
+	# only check
+	mklive_checkBaseImages_one "VAR_MDB_DOCK_IMG_INSTALL_INPUT" >/dev/null || return 1
+	mklive_checkBaseImages_one "VAR_MARIADB_DOCK_IMG" >/dev/null || return 1
+	mklive_checkBaseImages_one "VAR_NGINX_DOCK_IMG" >/dev/null || return 1
 
-	dck_getDoesDockerImageExist "$CFG_MKLIVE_MARIADB_DOCKERIMAGE" "$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
-	if [ $? -ne 0 ]; then
-		echo "$VAR_MYNAME: Error: Docker Image ${CFG_MKLIVE_MARIADB_DOCKERIMAGE}:${CFG_MKLIVE_DOCK_IMG_INSTALL_VERS} does not exist. Aborting." >/dev/stderr
-		return 1
-	fi
-
-	dck_getDoesDockerImageExist "$CFG_MKLIVE_NGINX_DOCKERIMAGE" "$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
-	if [ $? -ne 0 ]; then
-		echo "$VAR_MYNAME: Error: Docker Image ${CFG_MKLIVE_NGINX_DOCKERIMAGE}:${CFG_MKLIVE_DOCK_IMG_INSTALL_VERS} does not exist. Aborting." >/dev/stderr
-		return 1
-	fi
+	# get names
+	VAR_MDB_DOCK_IMG_INSTALL_INPUT="$(mklive_checkBaseImages_one "VAR_MDB_DOCK_IMG_INSTALL_INPUT")"
+	VAR_MARIADB_DOCK_IMG="$(mklive_checkBaseImages_one "VAR_MARIADB_DOCK_IMG")"
+	VAR_NGINX_DOCK_IMG="$(mklive_checkBaseImages_one "VAR_NGINX_DOCK_IMG")"
 	return 0
 }
 
@@ -358,7 +389,7 @@ function mklive_checkDbConnection() {
 	#echo -e "\n$VAR_MYNAME: Starting DB-Server (rootPw='$VAR_DB_FNCS_MARIADB_ROOT_PASS',cont='$CFG_MKLIVE_MARIADB_DOCKERCONTAINER',mpBase='$TMP_MP_BASE')..."
 	echo -e "\n$VAR_MYNAME: Starting DB-Server (mpBase='$TMP_MP_BASE')..."
 
-	local TMP_DI_MARIADB="$CFG_MKLIVE_MARIADB_DOCKERIMAGE:$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
+	local TMP_DI_MARIADB="$VAR_MARIADB_DOCK_IMG:$CFG_MKLIVE_DOCK_IMG_INSTALL_VERS"
 
 	local TMP_MP="$TMP_MP_BASE/$CFG_MKLIVE_PATH_BUILDTEMP/$CFG_MKLIVE_PATH_MNTPOINTS_DB_HOST/$CFG_MKLIVE_PATH_MNTPOINTS_DB_HOST_SUB_MARIADB"
 	[ -d "$TMP_MP" ] || mkdir -p "$TMP_MP"
