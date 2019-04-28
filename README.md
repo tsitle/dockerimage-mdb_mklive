@@ -1,5 +1,9 @@
 # Docker Image sources for mdb-mklive
 
+If you're just looking to run a dockerized Mailserver you may head directly to the GitHub Repository for **mdb-dc-mklive** (see link below).  
+
+--
+
 Docker Image for building the **mdb-live** Docker Image.
 
 The **mdb-live** Docker Image provides a fully featured dockerized Mailserver including
