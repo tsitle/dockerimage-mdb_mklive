@@ -46,6 +46,10 @@ _getCpuArch debian_dist >/dev/null || exit 1
 
 # ----------------------------------------------------------
 
+cd build-ctx || exit 1
+
+# ----------------------------------------------------------
+
 [ -d files/src-mklive/build-output ] && rm -r files/src-mklive/build-output
 [ -d files/src-mklive/build-temp ] && rm -r files/src-mklive/build-temp
 

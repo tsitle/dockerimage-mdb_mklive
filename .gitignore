@@ -10,5 +10,5 @@ nbproject/
 
 *.tmp
 
-files/src-mklive/build-temp/
-files/src-mklive/build-output/
+build-ctx/files/src-mklive/build-temp/
+build-ctx/files/src-mklive/build-output/
