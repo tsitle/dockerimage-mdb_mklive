@@ -8,5 +8,7 @@ nbproject/
 # IntelliJ IDEA:
 .idea/
 
+*.tmp
+
 files/src-mklive/build-temp/
 files/src-mklive/build-output/

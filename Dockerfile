@@ -1,6 +1,10 @@
 FROM scratch
 
-ADD files/rootfs-debian_stretch-9.8.tar.xz /
+ARG CF_CPUARCH_DEB_ROOTFS
+ARG CF_CPUARCH_DEB_DIST
+
+# source for rootfs: https://github.com/debuerreotype/docker-debian-artifacts/tree/dist-<CF_CPUARCH_DEB_ROOTFS>/stretch
+ADD files/rootfs-debian_stretch_9.8-${CF_CPUARCH_DEB_ROOTFS}.tar.xz /
 
 WORKDIR /root
 
@@ -20,11 +24,11 @@ RUN \
 				curl \
 				gnupg2 \
 				software-properties-common \
-	# add Docker’s official GPG key
+	# add Docker's official GPG key
 		&& curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - \
 	# add Docker's stable repository
 		&& add-apt-repository \
-				"deb [arch=amd64] https://download.docker.com/linux/debian \
+				"deb [arch=${CF_CPUARCH_DEB_DIST}] https://download.docker.com/linux/debian \
 				$(lsb_release -cs) \
 				stable" \
 		&& apt-get update \
@@ -51,7 +55,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # copy mklive sourcecode
 COPY files/src-mklive /root/
 # copy bashrc
-COPY files/bash/.bashrc /root/.bashrc
+COPY files/bash/dot_bashrc /root/.bashrc
 
 RUN \
 	# mklive sourcecode

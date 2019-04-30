@@ -8,17 +8,33 @@
 
 # Outputs CPU architecture string
 #
+# @param string $1 debian_rootfs|debian_dist
+#
 # @return int EXITCODE
 function mklive_getCpuArch() {
 	case "$(uname -m)" in
 		x86_64*)
-			echo -n "x86_64"
+			echo -n "amd64"
 			;;
-		aarch64)
-			echo -n "arm_64"
+		aarch64*)
+			if [ "$1" = "debian_rootfs" ]; then
+				echo -n "arm64v8"
+			elif [ "$1" = "debian_dist" ]; then
+				echo -n "arm64"
+			else
+				echo "$VAR_MYNAME: Error: invalid arg '$1'" >/dev/stderr
+				return 1
+			fi
 			;;
 		armv7*)
-			echo -n "arm_32"
+			if [ "$1" = "debian_rootfs" ]; then
+				echo -n "arm32v7"
+			elif [ "$1" = "debian_dist" ]; then
+				echo -n "armhf"
+			else
+				echo "$VAR_MYNAME: Error: invalid arg '$1'" >/dev/stderr
+				return 1
+			fi
 			;;
 		*)
 			echo "$VAR_MYNAME: Error: Unknown CPU architecture '$(uname -m)'" >/dev/stderr

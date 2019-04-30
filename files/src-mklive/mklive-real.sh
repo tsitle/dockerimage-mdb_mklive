@@ -90,7 +90,7 @@ mklive_checkConfigVars || exit 1
 
 # ----------------------------------------------------------
 
-mklive_getCpuArch >/dev/null || exit 1
+mklive_getCpuArch debian_dist >/dev/null || exit 1
 
 # ----------------------------------------------------------
 
@@ -102,16 +102,16 @@ VAR_DB_FNCS_MARIADB_ROOT_PASS=""
 
 VAR_DOCKERCOMPOSE_OUTP_FN="docker-compose.yaml"
 
-VAR_MDB_DOCK_IMG_INSTALL_INPUT="${CFG_MKLIVE_MDB_RELASE_DI_NAME}-$(mklive_getCpuArch)"
+VAR_MDB_DOCK_IMG_INSTALL_INPUT="${CFG_MKLIVE_MDB_RELASE_DI_NAME}-$(mklive_getCpuArch debian_dist)"
 
-VAR_MDB_DOCK_IMG_LIVE_OUTPUT="${CFG_MKLIVE_DOCK_IMG_LIVE}-$(mklive_getCpuArch)"
+VAR_MDB_DOCK_IMG_LIVE_OUTPUT="${CFG_MKLIVE_DOCK_IMG_LIVE}-$(mklive_getCpuArch debian_dist)"
 
 VAR_DCMDB_SCR_FN="dc-mdb.sh"
 
-VAR_MARIADB_DOCK_IMG="${CFG_MKLIVE_MARIADB_DOCKERIMAGE}-$(mklive_getCpuArch)"
+VAR_MARIADB_DOCK_IMG="${CFG_MKLIVE_MARIADB_DOCKERIMAGE}-$(mklive_getCpuArch debian_dist)"
 VAR_MARIADB_DB_DIR_TAR_FN="mariadb-dbs-vanilla.tgz"
 
-VAR_NGINX_DOCK_IMG="${CFG_MKLIVE_NGINX_DOCKERIMAGE}-$(mklive_getCpuArch)"
+VAR_NGINX_DOCK_IMG="${CFG_MKLIVE_NGINX_DOCKERIMAGE}-$(mklive_getCpuArch debian_dist)"
 
 # ----------------------------------------------------------
 
